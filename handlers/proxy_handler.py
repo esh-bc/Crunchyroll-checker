@@ -308,11 +308,7 @@ async def proxy_callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
     await query.answer()
     data = query.data
 
-    if data == "proxy_upload":
-        await _upload_entry(update, ctx)
-    elif data == "proxy_paste":
-        await _paste_entry(update, ctx)
-    elif data == "proxy_test":
+    if data == "proxy_test":
         await _test_proxies(update, ctx)
     elif data == "proxy_stats":
         await _proxy_stats(update, ctx)
