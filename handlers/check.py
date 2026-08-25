@@ -169,11 +169,13 @@ async def _cancel_conv(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 # Conversation handler for single check
+from telegram.ext import MessageHandler, CommandHandler, filters
+
 single_check_conv = ConversationHandler(
-    entry_points=[check_cmd],
+    entry_points=[CommandHandler("check", check_cmd)],
     states={
-        WAITING_EMAIL: [_email_received],
-        WAITING_PASS: [_pass_received],
+        WAITING_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, _email_received)],
+        WAITING_PASS:  [MessageHandler(filters.TEXT & ~filters.COMMAND, _pass_received)],
     },
-    fallbacks=[_cancel_conv],
+    fallbacks=[CommandHandler("cancel", _cancel_conv)],
 )
