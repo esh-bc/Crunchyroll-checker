@@ -5,8 +5,14 @@ import asyncio
 import logging
 from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, ConversationHandler
-
+from telegram.ext import (
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    CommandHandler,
+    CallbackQueryHandler,
+    filters,
+)
 import config
 import db.database as db
 from core.proxy import ProxyManager, parse_proxy_file, validate_proxies_bulk
