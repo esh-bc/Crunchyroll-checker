@@ -31,7 +31,7 @@ REQUIRED_CHANNELS: list[str] = [
 # ═══════════════════════════════════════════
 # MONGODB
 # ═══════════════════════════════════════════
-MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI: str = os.getenv("MONGO_URI", "mongodb+srv://singhyashraj:leechbotxesh@cluster0.i1ruod.mongodb.net/?appName=Cluster0")
 MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "crunchybot")
 
 # ═══════════════════════════════════════════
