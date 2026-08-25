@@ -84,7 +84,9 @@ async def proxies_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def _upload_entry(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text(
+    query = update.callback_query
+    await query.answer()
+    await query.message.reply_text(
         f"╭─ ⟡ {fancy('Upload Proxies')}\n"
         f"├─ Sᴇɴᴅ ᴀ <code>.txt</code> ғɪʟᴇ ᴡɪᴛʜ ᴘʀᴏxɪᴇs.\n"
         f"├─ Sᴜᴘᴘᴏʀᴛᴇᴅ ғᴏʀᴍᴀᴛs:\n"
@@ -98,7 +100,6 @@ async def _upload_entry(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         parse_mode="HTML",
     )
     return PROXY_WAIT_FILE
-
 
 async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     if not update.message.document:
