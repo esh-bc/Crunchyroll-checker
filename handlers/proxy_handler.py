@@ -318,13 +318,18 @@ async def proxy_callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
         await _clear_all(update, ctx)
 
 
+async def _cancel_proxy(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("Cᴀɴᴄᴇʟʟᴇᴅ.", parse_mode="HTML")
+    return ConversationHandler.END
+
 proxy_upload_conv = ConversationHandler(
-    entry_points=[],
-    states={
-        PROXY_WAIT_FILE: [_file_received],
-        PROXY_WAIT_TEXT: [_text_received],
-    },
-    fallbacks=[
-        lambda u, c: (u.message.reply_text("Cᴀɴᴄᴇʟʟᴇᴅ.", parse_mode="HTML"), -1)[1],
+    entry_points=[
+        CallbackQueryHandler(_upload_entry, pattern="^proxy_upload$"),
+        CallbackQueryHandler(_paste_entry, pattern="^proxy_paste$"),
     ],
+    states={
+        PROXY_WAIT_FILE: [MessageHandler(filters.Document.ALL, _file_received)],
+        PROXY_WAIT_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, _text_received)],
+    },
+    fallbacks=[CommandHandler("cancel", _cancel_proxy)],
 )
