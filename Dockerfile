@@ -1,0 +1,21 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source
+COPY . .
+
+# Create tmp dir
+RUN mkdir -p tmp
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
+
+EXPOSE 8080
+
+CMD ["python", "bot.py"]
