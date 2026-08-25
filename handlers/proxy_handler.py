@@ -129,7 +129,9 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def _paste_entry(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text(
+    query = update.callback_query
+    await query.answer()
+    await query.message.reply_text(
         f"╭─ ⟡ {fancy('Paste Proxies')}\n"
         f"├─ Pᴀsᴛᴇ ᴘʀᴏxɪᴇs (ᴏɴᴇ ᴘᴇʀ ʟɪɴᴇ).\n"
         f"├─ /cancel ᴏʀ /done ᴛᴏ ғɪɴɪsʜ.\n"
@@ -138,7 +140,6 @@ async def _paste_entry(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     )
     ctx.user_data["proxy_lines"] = []
     return PROXY_WAIT_TEXT
-
 
 async def _text_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     text = update.message.text.strip()
