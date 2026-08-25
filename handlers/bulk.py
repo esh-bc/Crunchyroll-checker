@@ -306,10 +306,12 @@ async def _cancel_bulk(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-from telegram.ext import ConversationHandler
+from telegram.ext import MessageHandler, CommandHandler, filters
 
 bulk_conv = ConversationHandler(
-    entry_points=[bulk_cmd],
-    states={BULK_WAIT_FILE: [_file_received]},
-    fallbacks=[_cancel_bulk],
+    entry_points=[CommandHandler("bulk", bulk_cmd)],
+    states={
+        BULK_WAIT_FILE: [MessageHandler(filters.Document.ALL, _file_received)],
+    },
+    fallbacks=[CommandHandler("cancel", _cancel_bulk)],
 )
