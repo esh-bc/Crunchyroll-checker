@@ -43,7 +43,6 @@ BULK_WAIT_FILE = 0
 
 
 async def bulk_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handle /bulk – prompt for combo file."""
     user = update.effective_user
     if not user:
         return ConversationHandler.END
@@ -52,7 +51,6 @@ async def bulk_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     if not user_doc or user_doc.get("banned"):
         return ConversationHandler.END
 
-    # Check concurrent jobs
     ok, msg = await check_concurrent_jobs(user.id)
     if not ok:
         await update.message.reply_text(error_msg("Jᴏʙ Aᴄᴛɪᴠᴇ", msg), parse_mode="HTML")
@@ -78,15 +76,12 @@ async def bulk_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
-    """Process uploaded combo file and start bulk job."""
     user = update.effective_user
     if not user or not update.message.document:
         await update.message.reply_text(error_msg("Eʀʀᴏʀ", "Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ ᴠᴀʟɪᴅ ғɪʟᴇ."), parse_mode="HTML")
         return BULK_WAIT_FILE
 
     doc = update.message.document
-
-    # Validate extension
     ext = Path(doc.file_name or "").suffix.lower()
     if ext not in (".txt", ".csv"):
         await update.message.reply_text(
@@ -95,7 +90,6 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         )
         return BULK_WAIT_FILE
 
-    # Validate size
     if doc.file_size and doc.file_size > config.MAX_FILE_SIZE:
         await update.message.reply_text(
             error_msg("Tᴏᴏ Lᴀʀɢᴇ", f"Mᴀx {config.MAX_FILE_SIZE // (1024*1024)}MB."),
@@ -103,7 +97,6 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         )
         return BULK_WAIT_FILE
 
-    # Download file
     status_msg = await update.message.reply_text(
         f"╭─ ⟡ {fancy('Processing')}\n"
         f"├─ Dᴏᴡɴʟᴏᴀᴅɪɴɢ ғɪʟᴇ...\n"
@@ -113,21 +106,18 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
 
     try:
         file = await doc.get_file()
-        # Stream to temp file
         tmp_path = config.TMP_DIR / f"bulk_{user.id}_{int(time.time())}.txt"
         await file.download_to_drive(str(tmp_path))
     except Exception as exc:
         await status_msg.edit_text(error_msg("Dᴏᴡɴʟᴏᴀᴅ Fᴀɪʟᴇᴅ", str(exc)[:200]), parse_mode="HTML")
         return BULK_WAIT_FILE
 
-    # Validate
     valid, err = validate_upload(str(tmp_path))
     if not valid:
         tmp_path.unlink(missing_ok=True)
         await status_msg.edit_text(error_msg("Iɴᴠᴀʟɪᴅ Fɪʟᴇ", err), parse_mode="HTML")
         return BULK_WAIT_FILE
 
-    # Read and parse combos
     try:
         content = tmp_path.read_text(encoding="utf-8", errors="ignore")
     except Exception as exc:
@@ -135,7 +125,6 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         await status_msg.edit_text(error_msg("Rᴇᴅ Eʀʀᴏʀ", str(exc)[:200]), parse_mode="HTML")
         return BULK_WAIT_FILE
 
-    # Clean up temp file early
     tmp_path.unlink(missing_ok=True)
 
     combos = parse_combos(content)
@@ -143,20 +132,17 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         await status_msg.edit_text(error_msg("Eᴍᴘᴛʏ", "Nᴏ ᴠᴀʟɪᴅ ᴄᴏᴍʙᴏs ғᴏᴜɴᴅ ɪɴ ғɪʟᴇ."), parse_mode="HTML")
         return BULK_WAIT_FILE
 
-    # Check plan limit
     ok, msg = await check_plan_limit(user.id, len(combos))
     if not ok:
         await status_msg.edit_text(error_msg("Lɪᴍɪᴛ Exᴄᴇᴇᴅᴇᴅ", msg), parse_mode="HTML")
         return ConversationHandler.END
 
-    # Get plan info for concurrency
     plan_info = await get_user_plan_info(user.id)
     proxy_mgr = ctx.bot_data.get("proxy_manager")
     user_doc = await db.get_user(user.id)
     checker_name = user_doc.get("first_name") or user_doc.get("username") or "User"
     checker_plan = user_doc.get("plan", "free")
 
-    # Start job in background
     await status_msg.edit_text(
         f"╭─ ⟡ {fancy('Starting')}\n"
         f"├─ Lᴏᴀᴅɪɴɢ {fmt_num(len(combos))} ᴄᴏᴍʙᴏs...\n"
@@ -164,7 +150,6 @@ async def _file_received(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
         parse_mode="HTML",
     )
 
-    # Launch the job
     job_task = asyncio.create_task(
         _run_job(
             combos=combos,
@@ -194,14 +179,12 @@ async def _run_job(
     checker_plan: str,
     ctx: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """Run the bulk job with live progress updates."""
     from telegram.error import BadRequest
 
     last_edit_time = 0.0
-    edit_interval = 3.0  # min seconds between edits
+    edit_interval = 3.0
 
     async def on_hit(email: str, password: str, info: dict) -> None:
-        """Send individual hit notification."""
         nonlocal last_edit_time
         try:
             text = hit_message(email, password, info, checker_name, checker_id, checker_plan)
@@ -259,14 +242,12 @@ async def _run_job(
             on_progress=on_progress,
         )
 
-        # Send final summary
         summary_text = job_summary_msg(result_ctx)
         try:
             await status_msg.edit_text(summary_text, parse_mode="HTML")
         except BadRequest:
             await status_msg.reply_text(summary_text, parse_mode="HTML")
 
-        # Send result files
         if result_ctx.out_dir:
             hits_file = result_ctx.out_dir / "hits.txt"
             if hits_file.exists() and hits_file.stat().st_size > 0:
@@ -312,11 +293,10 @@ async def _cancel_bulk(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-
 bulk_conv = ConversationHandler(
     entry_points=[CommandHandler("bulk", bulk_cmd)],
     states={
         BULK_WAIT_FILE: [MessageHandler(filters.Document.ALL, _file_received)],
     },
     fallbacks=[CommandHandler("cancel", _cancel_bulk)],
-)
+                )
