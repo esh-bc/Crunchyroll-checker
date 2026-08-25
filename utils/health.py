@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import Optional  # ← this line was missing
 from aiohttp import web
 
 import config
