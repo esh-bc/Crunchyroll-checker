@@ -13,7 +13,7 @@ load_dotenv(Path(__file__).parent / ".env")
 # TELEGRAM
 # ═══════════════════════════════════════════
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
-BOT_USERNAME: str = os.getenv("BOT_USERNAME", "@CrunchyCheckerBot")
+BOT_USERNAME: str = os.getenv("BOT_USERNAME", "@testCrunchyCheckerBot")
 DEV_CREDIT: str = os.getenv("DEV_CREDIT", "@iam_eshh")
 
 ADMIN_IDS: list[int] = [
@@ -32,7 +32,7 @@ REQUIRED_CHANNELS: list[str] = [
 # MONGODB
 # ═══════════════════════════════════════════
 MONGO_URI: str = os.getenv("MONGO_URI", "mongodb+srv://singhyashraj:leechbotxesh@cluster0.i1ruod.mongodb.net/?appName=Cluster0")
-MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "crunchybot")
+MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "crunchybotcheckerv2")
 
 # ═══════════════════════════════════════════
 # HEALTH CHECK
